@@ -1,0 +1,49 @@
+.otr-tab-button { display:inline-block; padding:8px 12px; background:#eaeaea; margin:0 4px; cursor:pointer; border-radius:4px; }
+.otr-tab-button.active { background:#555; color:#fff; }
+.otr-tab-content { display:none; margin-top:16px; }
+.otr-year-table { width:100%; border-collapse:collapse; }
+.otr-year-table th, .otr-year-table td { border:1px solid #ccc; padding:8px; }
+.otr-year-table td:nth-child(3), .otr-year-table th:nth-child(3) { text-align:center; }
+.otr-modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; padding:20px; border:2px solid #333; z-index:10000; max-width:90%; width:400px; }
+.otr-modal h4 { margin-top:0; }
+.otr-close { display:inline-block; margin-top:12px; cursor:pointer; color:#c00; }
+
+
+
+/* COLUMN WIDTHS START */
+
+.otr-episode-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.otr-episode-table th,
+.otr-episode-table td {
+  padding: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.otr-episode-table th:nth-child(1),
+.otr-episode-table td:nth-child(1) {
+  width: auto;
+}
+
+.otr-episode-table th:nth-child(2),
+.otr-episode-table td:nth-child(2) {
+  width: 140px;
+  min-width: 140px;
+  max-width: 140px;
+}
+
+.otr-episode-table th:nth-child(3),
+.otr-episode-table td:nth-child(3) {
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+  text-align: center;
+}
+
+/* COLUMN WIDTHS END */
