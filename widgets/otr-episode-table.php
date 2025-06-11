@@ -133,7 +133,7 @@ class OTR_Episode_Table extends Widget_Base {
 			            <span class='elementor-icon-list-icon'><i class='fas fa-cloud-download-alt'></i></span>
 			          </a>";
 			}
-			echo "</td>";
+			echo "</td>
                   </tr>";
         }
 
