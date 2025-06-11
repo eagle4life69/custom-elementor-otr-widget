@@ -36,11 +36,18 @@ class OTR_Episode_Table extends Widget_Base {
     }
 
     private function get_categories_list() {
-        $cats = get_categories(['hide_empty' => false]);
-        $opts = [];
-        foreach ($cats as $c) { $opts[$c->term_id] = $c->name; }
-        return $opts;
+    $cats = get_categories([
+        'hide_empty' => false,
+        'orderby' => 'name',
+        'order' => 'ASC',
+    ]);
+    $opts = [];
+    foreach ($cats as $c) {
+        $opts[$c->term_id] = $c->name;
     }
+    	return $opts;
+    }
+
 
     public function get_script_depends() { return ['otr-widget-script']; }
 
