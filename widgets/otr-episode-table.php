@@ -79,7 +79,7 @@ class OTR_Episode_Table extends Widget_Base {
             $month = $m[1] ?? '';
             $day   = $m[2] ?? '';
             $year  = $m[3] ?? '';
-            $date  = ($month && $day && $year) ? "$month-$day-$year" : '';
+            $date  = ($month && $day && $year) ? "$month-$day-19$year" : '';
             $sortable = ($year && $month && $day) ? intval("19$year$month$day") : 0;
 
             // Title parsing logic
@@ -126,12 +126,14 @@ class OTR_Episode_Table extends Widget_Base {
         foreach ($episodes as $e) {
             echo "<tr>
                     <td><a href='{$e['url']}'>{$e['title']}</a></td>
-                    <td>{$e['date']}</td>
-                    <td style='text-align:center;'>
-                      <a href='{$e['mp3']}' target='_blank'>
-                        <span class='elementor-icon-list-icon'><i class='fas fa-cloud-download-alt'></i></span>
-                      </a>
-                    </td>
+                    <td style='text-align:right;'>{$e['date']}</td>
+                    <td style='text-align:center;'>";
+			if (!empty($e['eid'])) {
+			    echo "<a href='{$e['mp3']}' target='_blank'>
+			            <span class='elementor-icon-list-icon'><i class='fas fa-cloud-download-alt'></i></span>
+			          </a>";
+			}
+			echo "</td>";
                   </tr>";
         }
 
