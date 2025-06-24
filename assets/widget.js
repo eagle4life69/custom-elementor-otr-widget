@@ -10,6 +10,8 @@ jQuery(function($){
     $('.otr-search').val('');
     $('.otr-tab-content').find('tr').show();
     $('.otr-no-results').remove();
+    $('#tab-search-results').remove();
+    $(".otr-tab-button[data-tab='tab-search-results']").remove();
   });
 
   $('.play-preview').on('click', function(e){
@@ -25,34 +27,70 @@ jQuery(function($){
 
 function otrSearch(input) {
   const filter = input.value.toLowerCase();
-  const tabs = document.querySelectorAll(".otr-tab-content");
-  tabs.forEach(tab => {
-    if (tab.style.display === "none") return; // only search visible tab
+
+  // Remove previous result tab if any
+  const oldTab = document.querySelector("#tab-search-results");
+  if (oldTab) oldTab.remove();
+  const oldBtn = document.querySelector(".otr-tab-button[data-tab='tab-search-results']");
+  if (oldBtn) oldBtn.remove();
+
+  if (!filter) {
+    // Restore all tabs
+    document.querySelectorAll(".otr-tab-content").forEach(t => t.style.display = 'none');
+    const active = document.querySelector(".otr-tab-button");
+    if (active) {
+      active.classList.add("active");
+      const tid = active.dataset.tab;
+      document.getElementById(tid).style.display = 'block';
+    }
+    return;
+  }
+
+  const resultRows = [];
+  document.querySelectorAll(".otr-tab-content").forEach(tab => {
     const rows = tab.querySelectorAll("table tr");
-    let hasResults = false;
     rows.forEach((row, index) => {
       if (index === 0) return; // Skip header
       const text = row.innerText.toLowerCase();
-      const match = text.includes(filter);
-      row.style.display = match ? "" : "none";
-      if (match) hasResults = true;
+      if (text.includes(filter)) {
+        resultRows.push(row.cloneNode(true));
+      }
     });
-
-    // Remove old no-results message if any
-    const existingMsg = tab.querySelector('.otr-no-results');
-    if (existingMsg) existingMsg.remove();
-
-    // Add "no results" row if nothing matches
-    if (!hasResults && filter !== '') {
-      const table = tab.querySelector("table");
-      const row = document.createElement("tr");
-      row.className = "otr-no-results";
-      const cell = document.createElement("td");
-      cell.colSpan = 3;
-      cell.style.textAlign = "center";
-      cell.textContent = "No episodes found.";
-      row.appendChild(cell);
-      table.appendChild(row);
-    }
   });
+
+  // Create result tab if matches found
+  if (resultRows.length > 0) {
+    const tabButtons = document.querySelector(".otr-tab-button").parentNode;
+    const btn = document.createElement("span");
+    btn.className = "otr-tab-button active";
+    btn.dataset.tab = "tab-search-results";
+    btn.textContent = "Results";
+    tabButtons.querySelectorAll(".otr-tab-button").forEach(b => b.classList.remove("active"));
+    tabButtons.appendChild(btn);
+
+    const tabContainer = document.querySelector(".otr-widget");
+    document.querySelectorAll(".otr-tab-content").forEach(c => c.style.display = 'none');
+    const newTab = document.createElement("div");
+    newTab.id = "tab-search-results";
+    newTab.className = "otr-tab-content";
+    newTab.style.display = "block";
+    const table = document.createElement("table");
+    table.className = "otr-episode-table";
+    const header = document.createElement("tr");
+    header.innerHTML = "<th>Title</th><th>Date</th><th>DL</th>";
+    table.appendChild(header);
+    resultRows.forEach(r => table.appendChild(r));
+    newTab.appendChild(table);
+    tabContainer.appendChild(newTab);
+
+    // Bind click to new tab
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".otr-tab-button").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".otr-tab-content").forEach(t => t.style.display = "none");
+      btn.classList.add("active");
+      newTab.style.display = "block";
+    });
+  } else {
+    alert("No matching episodes found.");
+  }
 }
