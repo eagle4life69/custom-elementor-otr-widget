@@ -60,30 +60,38 @@ function otrSearch(input) {
 
   // Create result tab if matches found
   if (resultRows.length > 0) {
-    const tabButtons = document.querySelector(".otr-tab-button").parentNode;
+    const buttonBar = document.querySelector(".otr-widget .otr-tab-button").parentElement;
     const btn = document.createElement("span");
     btn.className = "otr-tab-button active";
     btn.dataset.tab = "tab-search-results";
     btn.textContent = "Results";
-    tabButtons.querySelectorAll(".otr-tab-button").forEach(b => b.classList.remove("active"));
-    tabButtons.appendChild(btn);
 
-    const tabContainer = document.querySelector(".otr-widget");
+    // Deactivate other buttons
+    buttonBar.querySelectorAll(".otr-tab-button").forEach(b => b.classList.remove("active"));
+    buttonBar.appendChild(btn);
+
+    // Hide all other tabs
     document.querySelectorAll(".otr-tab-content").forEach(c => c.style.display = 'none');
+
+    // Create new tab panel
     const newTab = document.createElement("div");
     newTab.id = "tab-search-results";
     newTab.className = "otr-tab-content";
     newTab.style.display = "block";
+
     const table = document.createElement("table");
     table.className = "otr-episode-table";
+
     const header = document.createElement("tr");
     header.innerHTML = "<th>Title</th><th>Date</th><th>DL</th>";
     table.appendChild(header);
     resultRows.forEach(r => table.appendChild(r));
     newTab.appendChild(table);
-    tabContainer.appendChild(newTab);
 
-    // Bind click to new tab
+    const widget = document.querySelector(".otr-widget");
+    widget.appendChild(newTab);
+
+    // Add click event
     btn.addEventListener("click", () => {
       document.querySelectorAll(".otr-tab-button").forEach(b => b.classList.remove("active"));
       document.querySelectorAll(".otr-tab-content").forEach(t => t.style.display = "none");
