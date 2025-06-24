@@ -2,7 +2,7 @@
 /*
 Plugin Name: Custom Elementor OTR Widget
 Description: Lists OTR episodes with tabs by year and download links.
-Version: 2.6.3.3
+Version: 2.6.3.4
 Author: Andrew Rhynes
 GitHub Plugin URI: https://github.com/eagle4life69/custom-elementor-otr-widget
 GitHub Branch: main
