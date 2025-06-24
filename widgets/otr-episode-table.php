@@ -55,6 +55,7 @@ class OTR_Episode_Table extends Widget_Base {
     $s = $this->get_settings_for_display();
     if (empty($s['tabs'])) return;
     echo '<div class="otr-widget">';
+	echo '<input type="text" class="otr-search" placeholder="Search episodes..." onkeyup="otrSearch(this)">';
 
     foreach ($s['tabs'] as $i => $tab) {
         $year = esc_html($tab['tab_year']);
