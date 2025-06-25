@@ -54,19 +54,18 @@ class OTR_Episode_Table extends Widget_Base {
         $s = $this->get_settings_for_display();
         if (empty($s['tabs'])) return;
         echo '<div class="otr-widget">';
-        echo '<input type="text" class="otr-search" placeholder="Search episodes..." onkeyup="otrSearch(this)" style="margin-bottom: 10px; width: 100%; max-width: 400px;">';
+        echo '<input type="text" class="page-directory-search" placeholder="Search episodes..." onkeyup="pageDirectorySearch(this)" style="margin-bottom: 10px; width: 100%; max-width: 400px;">';
 
         foreach ($s['tabs'] as $i => $tab) {
             $year = esc_html($tab['tab_year']);
             $act = $i===0?'active':'';
-            echo "<span class='otr-tab-button $act' data-tab='tab{$i}'>{$year}</span>";
+            echo "<span class='page-directory-tab-button $act' data-tab='tab{$i}'>{$year}</span>";
         }
 
         foreach ($s['tabs'] as $i => $tab) {
-            $cat = intval($tab['tab_category']);
-            if (!$cat) continue;
+            $cat = $tab['tab_category'];
             $disp = $i===0?'block':'none';
-            echo "<div id='tab{$i}' class='otr-tab-content' style='display:{$disp}'>";
+            echo "<div id='tab{$i}' class='page-directory-tab-content' style='display:{$disp}'>";
 
             $posts = get_posts(['category' => $cat, 'numberposts' => -1]);
             $episode_ids = [];
@@ -74,8 +73,6 @@ class OTR_Episode_Table extends Widget_Base {
 
             foreach ($posts as $post) {
                 $full = get_the_title($post);
-
-                // Parse MM-DD-YY from title
                 preg_match('/\((\d{2})-(\d{2})-(\d{2})\)$/', $full, $m);
                 $month = $m[1] ?? '';
                 $day   = $m[2] ?? '';
@@ -83,7 +80,6 @@ class OTR_Episode_Table extends Widget_Base {
                 $date  = ($month && $day && $year) ? "$month-$day-19$year" : '';
                 $sortable = ($year && $month && $day) ? intval("19$year$month$day") : 0;
 
-                // Title parsing logic
                 if (strpos($full, ' | ') !== false) {
                     $parts = explode(' | ', $full);
                 } else {
@@ -91,7 +87,6 @@ class OTR_Episode_Table extends Widget_Base {
                 }
                 $title = $parts[0];
 
-                // Get MP3 + Episode ID
                 $meta = get_post_meta($post->ID,'enclosure',true);
                 $mp3=''; $eid='';
                 if ($meta) {
@@ -108,21 +103,20 @@ class OTR_Episode_Table extends Widget_Base {
                 }
 
                 $episodes[] = [
-                    'title' => esc_html($title),
-                    'date' => esc_html($date),
+                    'title' => $title,
+                    'date' => $date,
                     'sortable' => $sortable,
-                    'mp3' => esc_url($mp3),
+                    'mp3' => $mp3,
                     'eid' => $eid,
-                    'url' => esc_url(get_permalink($post)),
+                    'url' => get_permalink($post),
                 ];
             }
 
-            // Sort episodes chronologically
             usort($episodes, function ($a, $b) {
                 return $a['sortable'] <=> $b['sortable'];
             });
 
-            echo "<table class='otr-episode-table'><tr><th>Title</th><th>Date</th><th>DL</th></tr>";
+            echo "<table class='page-directory-table'><tr><th>Title</th><th>Date</th><th>DL</th></tr>";
             foreach ($episodes as $e) {
                 echo "<tr>
                         <td><a href='{$e['url']}'>{$e['title']}</a></td>
@@ -133,13 +127,12 @@ class OTR_Episode_Table extends Widget_Base {
                             <span class='elementor-icon-list-icon'><i class='fas fa-cloud-download-alt'></i></span>
                           </a>";
                 }
-                echo "</td>
-                      </tr>";
+                echo "</td></tr>";
             }
 
             if (!empty($episode_ids)) {
                 $joined_ids = implode(',', $episode_ids);
-                $batch_url = esc_url("https://www.otrwesterns.com/mp3/download.php?ep={$joined_ids}");
+                $batch_url = "https://www.otrwesterns.com/mp3/download.php?ep={$joined_ids}";
                 echo "<tr class='download-all'>
                         <td style='text-align:right;font-weight: bold;'>Download all shows from {$tab['tab_year']}</td>
                         <td></td>
