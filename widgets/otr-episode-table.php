@@ -5,6 +5,7 @@ class OTR_Episode_Table extends Widget_Base {
     public function get_name() { return 'otr_episode_table'; }
     public function get_title() { return __('OTR Episode Table', 'plugin-name'); }
     public function get_icon() { return 'eicon-post-list'; }
+    public function get_type() { return 'general'; }
     public function get_categories() { return ['general']; }
 
     protected function _register_controls() {
