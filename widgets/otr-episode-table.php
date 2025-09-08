@@ -5,7 +5,6 @@ class OTR_Episode_Table extends Widget_Base {
     public function get_name() { return 'otr_episode_table'; }
     public function get_title() { return __('OTR Episode Table', 'plugin-name'); }
     public function get_icon() { return 'eicon-post-list'; }
-    public function get_type() { return 'general'; }
     public function get_categories() { return ['general']; }
 
     protected function _register_controls() {
@@ -72,21 +71,21 @@ class OTR_Episode_Table extends Widget_Base {
             $episodes = [];
 
             foreach ($posts as $post) {
-                $full = get_the_title($post);
+                $full = rtrim(get_the_title($post));
+				$full = preg_replace('/[[:space:]]+/u', ' ', $full); // normalize all whitespace
+				$full = str_replace(["–", "—", "−"], "-", $full); // replace en/em dashes with regular dash
 
-                preg_match('/\((\d{2})-(\d{2})-(\d{2})\)$/', $full, $m);
+
+                preg_match('/\((\d{2})-(\d{2})-(\d{2})\)\s*$/u', $full, $m);
                 $month = $m[1] ?? '';
                 $day   = $m[2] ?? '';
                 $year  = $m[3] ?? '';
                 $date  = ($month && $day && $year) ? "$month-$day-19$year" : '';
                 $sortable = ($year && $month && $day) ? intval("19$year$month$day") : 0;
 
-                if (strpos($full, ' | ') !== false) {
-                    $parts = explode(' | ', $full);
-                } else {
-                    $parts = explode(' – ', $full);
-                }
-                $title = $parts[0];
+                $full_cleaned = preg_replace('/\s+$/u', '', $full); // Remove trailing spaces or invisible characters
+				$parts = preg_split('/\s*[\|\x{2013}\x{2014}]\s*/u', $full_cleaned); // Split on |, – (EN DASH), — (EM DASH)
+				$title = $parts[0];
 
                 $meta = get_post_meta($post->ID,'enclosure',true);
                 $mp3=''; $eid=''; $duration=''; $filesize='';
@@ -102,11 +101,18 @@ class OTR_Episode_Table extends Widget_Base {
                             }
                         }
                     }
-                    // Parse serialized data
                     if (strpos($extra, 'a:') === 0) {
                         $unser = @unserialize($extra);
                         if (is_array($unser)) {
-                            $duration = $unser['duration'] ?? '';
+                            $duration = '';
+                            if (!empty($unser['duration'])) {
+                                $dur = $unser['duration'];
+                                if (preg_match('/^(0+:)?(\d+:\d+)/', $dur, $dm)) {
+                                    $duration = $dm[2];
+                                } else {
+                                    $duration = ltrim(preg_replace('/^0:/', '', $dur), ':');
+                                }
+                            }
                             $filesize = isset($lines[1]) ? size_format((int)$lines[1]) : '';
                         }
                     }
@@ -127,8 +133,21 @@ class OTR_Episode_Table extends Widget_Base {
             usort($episodes, function ($a, $b) {
                 return $a['sortable'] <=> $b['sortable'];
             });
-
-            echo "<table class='otr-episode-table'><tr><th>Title</th><th>Date</th><th>Length</th><th>File Size</th><th>DL</th></tr>";
+            echo "<table class='otr-episode-table'>
+    <colgroup>
+        <col style='width: 70%;'>
+        <col style='width: 10%;'>
+        <col style='width: 8%;'>
+        <col style='width: 8%;'>
+        <col style='width: 4%;'>
+    </colgroup>
+    <tr>
+        <th>Title</th>
+        <th>Date</th>
+        <th>Length</th>
+        <th>File Size</th>
+        <th>DL</th>
+    </tr>";
             foreach ($episodes as $e) {
                 echo "<tr>
                         <td><a href='{$e['url']}'>{$e['title']}</a></td>
