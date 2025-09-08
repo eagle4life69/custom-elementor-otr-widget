@@ -36,125 +36,130 @@ class OTR_Episode_Table extends Widget_Base {
     }
 
     private function get_categories_list() {
-    $cats = get_categories([
-        'hide_empty' => false,
-        'orderby' => 'name',
-        'order' => 'ASC',
-    ]);
-    $opts = [];
-    foreach ($cats as $c) {
-        $opts[$c->term_id] = $c->name;
+        $cats = get_categories([
+            'hide_empty' => false,
+            'orderby' => 'name',
+            'order' => 'ASC',
+        ]);
+        $opts = [];
+        foreach ($cats as $c) {
+            $opts[$c->term_id] = $c->name;
+        }
+        return $opts;
     }
-    	return $opts;
-    }
-
 
     public function get_script_depends() { return ['otr-widget-script']; }
 
     protected function render() {
-    $s = $this->get_settings_for_display();
-    if (empty($s['tabs'])) return;
-    echo '<div class="otr-widget">';
+        $s = $this->get_settings_for_display();
+        if (empty($s['tabs'])) return;
+        echo '<div class="otr-widget">';
 
-    foreach ($s['tabs'] as $i => $tab) {
-        $year = esc_html($tab['tab_year']);
-        $act = $i===0?'active':'';
-        echo "<span class='otr-tab-button $act' data-tab='tab{$i}'>{$year}</span>";
-    }
+        foreach ($s['tabs'] as $i => $tab) {
+            $year = esc_html($tab['tab_year']);
+            $act = $i===0?'active':'';
+            echo "<span class='otr-tab-button $act' data-tab='tab{$i}'>{$year}</span>";
+        }
 
-    foreach ($s['tabs'] as $i => $tab) {
-        $cat = $tab['tab_category'];
-        $disp = $i===0?'block':'none';
-        echo "<div id='tab{$i}' class='otr-tab-content' style='display:{$disp}'>";
+        foreach ($s['tabs'] as $i => $tab) {
+            $cat = $tab['tab_category'];
+            $disp = $i===0?'block':'none';
+            echo "<div id='tab{$i}' class='otr-tab-content' style='display:{$disp}'>";
 
-        $posts = get_posts(['category' => $cat, 'numberposts' => -1]);
-        $episode_ids = [];
-        $episodes = [];
+            $posts = get_posts(['category' => $cat, 'numberposts' => -1]);
+            $episode_ids = [];
+            $episodes = [];
 
-        foreach ($posts as $post) {
-            $full = get_the_title($post);
+            foreach ($posts as $post) {
+                $full = get_the_title($post);
 
-            // Parse MM-DD-YY from title
-            preg_match('/\((\d{2})-(\d{2})-(\d{2})\)$/', $full, $m);
-            $month = $m[1] ?? '';
-            $day   = $m[2] ?? '';
-            $year  = $m[3] ?? '';
-            $date  = ($month && $day && $year) ? "$month-$day-19$year" : '';
-            $sortable = ($year && $month && $day) ? intval("19$year$month$day") : 0;
+                preg_match('/\((\d{2})-(\d{2})-(\d{2})\)$/', $full, $m);
+                $month = $m[1] ?? '';
+                $day   = $m[2] ?? '';
+                $year  = $m[3] ?? '';
+                $date  = ($month && $day && $year) ? "$month-$day-19$year" : '';
+                $sortable = ($year && $month && $day) ? intval("19$year$month$day") : 0;
 
-            // Title parsing logic
-            if (strpos($full, ' | ') !== false) {
-                $parts = explode(' | ', $full);
-            } else {
-                $parts = explode(' – ', $full);
-            }
-            $title = $parts[0];
+                if (strpos($full, ' | ') !== false) {
+                    $parts = explode(' | ', $full);
+                } else {
+                    $parts = explode(' – ', $full);
+                }
+                $title = $parts[0];
 
-            // Get MP3 + Episode ID
-            $meta = get_post_meta($post->ID,'enclosure',true);
-            $mp3=''; $eid='';
-            if ($meta) {
-                $lines = explode("\n", $meta);
-                foreach ($lines as $ln) {
-                    if (strpos($ln, 'download.mp3') !== false) {
-                        $mp3 = trim($ln);
-                        if (preg_match('/episodes\/(\d+)\/download\.mp3/', $mp3, $idm)) {
-                            $eid = $idm[1];
-                            if (!empty($eid)) $episode_ids[] = $eid;
+                $meta = get_post_meta($post->ID,'enclosure',true);
+                $mp3=''; $eid=''; $duration=''; $filesize='';
+                if ($meta) {
+                    $lines = explode("\n", $meta);
+                    $extra = end($lines);
+                    foreach ($lines as $ln) {
+                        if (strpos($ln, 'download.mp3') !== false) {
+                            $mp3 = trim($ln);
+                            if (preg_match('/episodes\/(\d+)\/download\.mp3/', $mp3, $idm)) {
+                                $eid = $idm[1];
+                                if (!empty($eid)) $episode_ids[] = $eid;
+                            }
+                        }
+                    }
+                    // Parse serialized data
+                    if (strpos($extra, 'a:') === 0) {
+                        $unser = @unserialize($extra);
+                        if (is_array($unser)) {
+                            $duration = $unser['duration'] ?? '';
+                            $filesize = isset($lines[1]) ? size_format((int)$lines[1]) : '';
                         }
                     }
                 }
+
+                $episodes[] = [
+                    'title' => $title,
+                    'date' => $date,
+                    'sortable' => $sortable,
+                    'mp3' => $mp3,
+                    'eid' => $eid,
+                    'duration' => $duration,
+                    'filesize' => $filesize,
+                    'url' => get_permalink($post),
+                ];
             }
 
-            $episodes[] = [
-                'title' => $title,
-                'date' => $date,
-                'sortable' => $sortable,
-                'mp3' => $mp3,
-                'eid' => $eid,
-                'url' => get_permalink($post),
-            ];
+            usort($episodes, function ($a, $b) {
+                return $a['sortable'] <=> $b['sortable'];
+            });
+
+            echo "<table class='otr-episode-table'><tr><th>Title</th><th>Date</th><th>Length</th><th>File Size</th><th>DL</th></tr>";
+            foreach ($episodes as $e) {
+                echo "<tr>
+                        <td><a href='{$e['url']}'>{$e['title']}</a></td>
+                        <td style='text-align:right;'>{$e['date']}</td>
+                        <td style='text-align:right;'>{$e['duration']}</td>
+                        <td style='text-align:right;'>{$e['filesize']}</td>
+                        <td style='text-align:center;'>";
+                if (!empty($e['eid'])) {
+                    echo "<a href='{$e['mp3']}' target='_blank'>
+                            <span class='elementor-icon-list-icon'><i class='fas fa-cloud-download-alt'></i></span>
+                          </a>";
+                }
+                echo "</td>
+                      </tr>";
+            }
+
+            if (!empty($episode_ids)) {
+                $joined_ids = implode(',', $episode_ids);
+                $batch_url = "https://www.otrwesterns.com/mp3/download.php?ep={$joined_ids}";
+                echo "<tr class='download-all'>
+                        <td style='text-align:right;font-weight: bold;' colspan='4'>Download all shows from {$tab['tab_year']}</td>
+                        <td style='text-align:center;'>
+                          <a href='{$batch_url}' target='_blank'>
+                            <span class='elementor-icon-list-icon'><i class='fas fa-cloud-download-alt'></i></span>
+                          </a>
+                        </td>
+                      </tr>";
+            }
+
+            echo "</table></div>";
         }
 
-        // Sort episodes chronologically
-        usort($episodes, function ($a, $b) {
-            return $a['sortable'] <=> $b['sortable'];
-        });
-
-        // Table output
-        echo "<table class='otr-episode-table'><tr><th>Title</th><th>Date</th><th>DL</th></tr>";
-        foreach ($episodes as $e) {
-            echo "<tr>
-                    <td><a href='{$e['url']}'>{$e['title']}</a></td>
-                    <td style='text-align:right;'>{$e['date']}</td>
-                    <td style='text-align:center;'>";
-			if (!empty($e['eid'])) {
-			    echo "<a href='{$e['mp3']}' target='_blank'>
-			            <span class='elementor-icon-list-icon'><i class='fas fa-cloud-download-alt'></i></span>
-			          </a>";
-			}
-			echo "</td>
-                  </tr>";
-        }
-
-        // Batch download row
-        if (!empty($episode_ids)) {
-            $joined_ids = implode(',', $episode_ids);
-            $batch_url = "https://www.otrwesterns.com/mp3/download.php?ep={$joined_ids}";
-            echo "<tr class='download-all'>
-                    <td style='text-align:right;font-weight: bold;'>Download all shows from {$tab['tab_year']}</td>
-                    <td></td>
-                    <td style='text-align:center;'>
-                      <a href='{$batch_url}' target='_blank'>
-                        <span class='elementor-icon-list-icon'><i class='fas fa-cloud-download-alt'></i></span>
-                      </a>
-                    </td>
-                  </tr>";
-        }
-
-        echo "</table></div>";
+        echo '</div>';
     }
-
-    echo '</div>';
-	}
 }
