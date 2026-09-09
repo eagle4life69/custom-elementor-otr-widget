@@ -34,24 +34,44 @@ function ceow_github_get_remote_version() {
     return $version;
 }
 
+function ceow_github_build_update_object($version, $plugin_file) {
+    $update = new stdClass();
+    $update->id = 'https://github.com/eagle4life69/custom-elementor-otr-widget';
+    $update->slug = 'custom-elementor-otr-widget';
+    $update->plugin = $plugin_file;
+    $update->new_version = $version;
+    $update->url = 'https://github.com/eagle4life69/custom-elementor-otr-widget';
+    $update->package = 'https://github.com/eagle4life69/custom-elementor-otr-widget/archive/refs/heads/main.zip';
+    $update->requires_php = '7.2';
+    return $update;
+}
+
 function ceow_github_check_for_update($transient) {
-    if (empty($transient->checked)) {
-        return $transient;
+    if (!is_object($transient)) {
+        $transient = new stdClass();
+    }
+    if (empty($transient->response) || !is_array($transient->response)) {
+        $transient->response = [];
+    }
+    if (empty($transient->no_update) || !is_array($transient->no_update)) {
+        $transient->no_update = [];
     }
 
     $plugin_file = plugin_basename(CEOW_PLUGIN_FILE);
     $remote_version = ceow_github_get_remote_version();
 
-    if ($remote_version && version_compare(CEOW_VERSION, $remote_version, '<')) {
-        $update = new stdClass();
-        $update->id = 'github.com/eagle4life69/custom-elementor-otr-widget';
-        $update->slug = 'custom-elementor-otr-widget';
-        $update->plugin = $plugin_file;
-        $update->new_version = $remote_version;
-        $update->url = 'https://github.com/eagle4life69/custom-elementor-otr-widget';
-        $update->package = 'https://github.com/eagle4life69/custom-elementor-otr-widget/archive/refs/heads/main.zip';
-        $update->requires_php = '7.2';
+    if (!$remote_version) {
+        return $transient;
+    }
+
+    $update = ceow_github_build_update_object($remote_version, $plugin_file);
+
+    if (version_compare(CEOW_VERSION, $remote_version, '<')) {
         $transient->response[$plugin_file] = $update;
+        unset($transient->no_update[$plugin_file]);
+    } else {
+        $transient->no_update[$plugin_file] = $update;
+        unset($transient->response[$plugin_file]);
     }
 
     return $transient;
