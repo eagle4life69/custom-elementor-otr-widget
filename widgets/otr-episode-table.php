@@ -66,15 +66,18 @@ class OTR_Episode_Table extends Widget_Base {
             $disp = $i===0?'block':'none';
             echo "<div id='tab{$i}' class='otr-tab-content' style='display:{$disp}'>";
 
-            $posts = get_posts(['category' => $cat, 'numberposts' => -1]);
+            $posts = get_posts([
+                'category' => $cat,
+                'numberposts' => -1,
+                'post_status' => ['publish', 'future'],
+            ]);
             $episode_ids = [];
             $episodes = [];
 
             foreach ($posts as $post) {
                 $full = rtrim(get_the_title($post));
-				$full = preg_replace('/[[:space:]]+/u', ' ', $full); // normalize all whitespace
-				$full = str_replace(["–", "—", "−"], "-", $full); // replace en/em dashes with regular dash
-
+                $full = preg_replace('/[[:space:]]+/u', ' ', $full);
+                $full = str_replace(["–", "—", "−"], "-", $full);
 
                 preg_match('/\((\d{2})-(\d{2})-(\d{2})\)\s*$/u', $full, $m);
                 $month = $m[1] ?? '';
@@ -83,9 +86,9 @@ class OTR_Episode_Table extends Widget_Base {
                 $date  = ($month && $day && $year) ? "$month-$day-19$year" : '';
                 $sortable = ($year && $month && $day) ? intval("19$year$month$day") : 0;
 
-                $full_cleaned = preg_replace('/\s+$/u', '', $full); // Remove trailing spaces or invisible characters
-				$parts = preg_split('/\s*[\|\x{2013}\x{2014}]\s*/u', $full_cleaned); // Split on |, – (EN DASH), — (EM DASH)
-				$title = $parts[0];
+                $full_cleaned = preg_replace('/\s+$/u', '', $full);
+                $parts = preg_split('/\s*[\|\x{2013}\x{2014}]\s*/u', $full_cleaned);
+                $title = $parts[0];
 
                 $meta = get_post_meta($post->ID,'enclosure',true);
                 $mp3=''; $eid=''; $duration=''; $filesize='';
