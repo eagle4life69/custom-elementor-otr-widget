@@ -2,7 +2,7 @@
 /*
 Plugin Name: Custom Elementor OTR Widget
 Description: Lists OTR episodes with tabs by year and download links.
-Version: 2.7.2
+Version: 2.7.3
 Author: Andrew Rhynes
 Author URI: https://github.com/eagle4life69
 Plugin URI: https://github.com/eagle4life69/custom-elementor-otr-widget
@@ -10,6 +10,12 @@ GitHub Plugin URI: https://github.com/eagle4life69/custom-elementor-otr-widget
 GitHub Branch: main
 */
 
+if (!defined('ABSPATH')) exit;
+
+define('CEOW_VERSION', '2.7.3');
+define('CEOW_PLUGIN_FILE', __FILE__);
+
+require_once __DIR__ . '/github-updater.php';
 
 function ceow_enqueue_assets() {
     wp_enqueue_script('otr-widget-script', plugins_url('assets/widget.js', __FILE__), ['jquery'], false, true);
