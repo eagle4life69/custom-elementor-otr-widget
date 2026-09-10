@@ -121,6 +121,7 @@ class OTR_Episode_Table extends Widget_Base {
                     }
                 }
 
+                $status = get_post_status($post);
                 $episodes[] = [
                     'title' => $title,
                     'date' => $date,
@@ -130,7 +131,8 @@ class OTR_Episode_Table extends Widget_Base {
                     'duration' => $duration,
                     'filesize' => $filesize,
                     'url' => get_permalink($post),
-                    'status' => get_post_status($post),
+                    'status' => $status,
+                    'scheduled_date' => ($status === 'future') ? get_post_time('m-d-Y', false, $post) : '',
                 ];
             }
 
@@ -156,6 +158,9 @@ class OTR_Episode_Table extends Widget_Base {
                 echo '<tr><td>';
                 if ($e['status'] === 'future') {
                     echo esc_html($e['title']);
+                    if (!empty($e['scheduled_date'])) {
+                        echo ' <span class="otr-scheduled-note" style="font-size:0.85em;font-style:italic;opacity:0.75;">(Scheduled for release on ' . esc_html($e['scheduled_date']) . ')</span>';
+                    }
                 } else {
                     echo '<a href="' . esc_url($e['url']) . '">' . esc_html($e['title']) . '</a>';
                 }
