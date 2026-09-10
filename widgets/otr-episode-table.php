@@ -130,6 +130,7 @@ class OTR_Episode_Table extends Widget_Base {
                     'duration' => $duration,
                     'filesize' => $filesize,
                     'url' => get_permalink($post),
+                    'status' => get_post_status($post),
                 ];
             }
 
@@ -152,14 +153,19 @@ class OTR_Episode_Table extends Widget_Base {
         <th>DL</th>
     </tr>";
             foreach ($episodes as $e) {
-                echo "<tr>
-                        <td><a href='{$e['url']}'>{$e['title']}</a></td>
-                        <td style='text-align:right;'>{$e['date']}</td>
-                        <td style='text-align:right;'>{$e['duration']}</td>
-                        <td style='text-align:right;'>{$e['filesize']}</td>
+                echo '<tr><td>';
+                if ($e['status'] === 'future') {
+                    echo esc_html($e['title']);
+                } else {
+                    echo '<a href="' . esc_url($e['url']) . '">' . esc_html($e['title']) . '</a>';
+                }
+                echo "</td>
+                        <td style='text-align:right;'>" . esc_html($e['date']) . "</td>
+                        <td style='text-align:right;'>" . esc_html($e['duration']) . "</td>
+                        <td style='text-align:right;'>" . esc_html($e['filesize']) . "</td>
                         <td style='text-align:center;'>";
                 if (!empty($e['eid'])) {
-                    echo "<a href='{$e['mp3']}' target='_blank'>
+                    echo "<a href='" . esc_url($e['mp3']) . "' target='_blank'>
                             <span class='elementor-icon-list-icon'><i class='fas fa-cloud-download-alt'></i></span>
                           </a>";
                 }
